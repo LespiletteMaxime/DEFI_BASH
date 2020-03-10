@@ -12,7 +12,8 @@ PATH_TO_IMG=$2;
 PATH_TO_ALBUM="${HOME}/Albums/${ALBUM_NAME}/";
 
 # SCRIPT_PATH: Chemin absolu du script.sh
-SCRIPT_PATH=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+#SCRIPT_PATH=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+SCRIPT_PATH=$(pwd)
 
 stop_script(){
 	echo "Arrêt du script !";
@@ -90,11 +91,13 @@ if ! [[ -d "${HOME}/Albums" ]]; then
 fi;
 
 # Création du dossier de l'album car, et pas de vérif car déjà vérifié qu'il n'existait pas
-mkdir "${PATH_TO_ALBUM}";
+#mkdir "${PATH_TO_ALBUM}";
 
 # Création des dossiers structures
-mkdir "${PATH_TO_ALBUM}/thumbnails";
-mkdir "${PATH_TO_ALBUM}/originaux";
+#mkdir "${PATH_TO_ALBUM}/thumbnails";
+#mkdir "${PATH_TO_ALBUM}/originaux";
+
+mkdir -p "${PATH_TO_ALBUM}/{thumbnails,originaux}";
 
 # Création du fichier .html de base
 touch "${PATH_TO_ALBUM}/index.html";
@@ -109,6 +112,10 @@ echo "<html><head>${TITLE_TAG}<meta http-equiv=\"Content-Type\" content=\"text/h
 .grid-wrap{padding:1%}.list-block{float:left;margin:1%;width:31.33333%;font-size:0;overflow:hidden}.list-block figure{position:relative;display:block;color:#000;text-align:center}.list-block figure:after{background:#fff;width:100%;height:100%;position:absolute;left:0;bottom:0;content:'';filter:progid:DXImageTransform.Microsoft.Alpha(Opacity=70);opacity:.7;-webkit-transform:skew(-45deg) scaleX(0);-ms-transform:skew(-45deg) scaleX(0);transform:skew(-45deg) scaleX(0);-moz-transition:all .3s ease-in-out;-o-transition:all .3s ease-in-out;-webkit-transition:all .3s ease-in-out;transition:all .3s ease-in-out}.list-block figure:hover:after{-webkit-transform:skew(-45deg) scaleX(1);-ms-transform:skew(-45deg) scaleX(1);transform:skew(-45deg) scaleX(1);-moz-transition:all 400ms cubic-bezier(0.175,0.885,0.32,1.275);-o-transition:all 400ms cubic-bezier(0.175,0.885,0.32,1.275);-webkit-transition:all 400ms cubic-bezier(0.175,0.885,0.32,1.275);transition:all 400ms cubic-bezier(0.175,0.885,0.32,1.275)}.list-block figure:hover figcaption h2,.list-block figure:hover figcaption p{-moz-transform:translate3d(0%,0%,0);-webkit-transform:translate3d(0%,0%,0);transform:translate3d(0%,0%,0);-webkit-transition-delay:.2s;transition-delay:.2s}.list-block figure:hover figcaption h2{filter:progid:DXImageTransform.Microsoft.Alpha(enabled=false);opacity:1}.list-block figure:hover figcaption p{filter:progid:DXImageTransform.Microsoft.Alpha(Opacity=70);opacity:.7}.list-block img{filter:progid:DXImageTransform.Microsoft.Alpha(enabled=false);opacity:1;max-width:100%;min-width:100%;-moz-transition:opacity .35s ease;-o-transition:opacity .35s ease;-webkit-transition:opacity .35s ease;transition:opacity .35s ease}.list-block figcaption{position:absolute;top:50%;left:0;width:100%;-moz-transform:translateY(-50%);-ms-transform:translateY(-50%);-webkit-transform:translateY(-50%);transform:translateY(-50%);z-index:1}.list-block h2,.list-block p{margin:0;width:100%;filter:progid:DXImageTransform.Microsoft.Alpha(Opacity=0);opacity:0}.list-block h2{padding:0 30px 10px;display:inline-block;font-weight:400;text-transform:uppercase;font-size:24px}.list-block p{padding:0 50px;font-size:14px;text-transform:uppercase}*{box-sizing:border-box;-moz-transition:all .6s ease;-o-transition:all .6s ease;-webkit-transition:all .6s ease;transition:all .6s ease}body{background:#00d2ff;background:-webkit-linear-gradient(to left,#00d2ff,#3a7bd5);background:linear-gradient(to left,#00d2ff,#3a7bd5);font-family:'Roboto',sans-serif}h1{color:#fff;padding:4%;font-size:30px;text-transform:uppercase;font-weight:700;text-align:center}h1 small{font-size:18px;display:block;text-transform:none;font-weight:300;margin-top:5px}</style></head><body>
 ${H1_DATE}
 <div class=\"grid-wrap\">" >> "${PATH_TO_ALBUM}index.html" 
+
+# Pour prendre en compte les espaces dans les noms de fichiers 
+# Je t'ai trouvé de la doc en fr sur IFS ici : https://michauko.org/blog/ifs-separateurs-scripts-bash-174/
+IFS=$(echo -en "\n\b") 
 
 for IMG in $(ls "${PATH_TO_IMG}"); do
 
@@ -125,8 +132,10 @@ for IMG in $(ls "${PATH_TO_IMG}"); do
 		cp "${PATH_TO_IMG}${IMG}" "${PATH_TO_ALBUM}originaux/${IMG}"
 		convert "${PATH_TO_IMG}${IMG}" -thumbnail 585x388 -background "black" -gravity center -extent 585x388 "${PATH_TO_ALBUM}thumbnails/${IMG}" > /dev/null 2>&1
 		if [[ $? == 0 ]]; then
-			IMG_ARRAY=(${IMG//./ });
-			IMG_NAME=${IMG_ARRAY[0]};
+			#IMG_ARRAY=(${IMG//./ });
+			#IMG_NAME=${IMG_ARRAY[0]};
+			IMG_NAME=$(basename -- "$IMG") 
+			IMG_NAME="${IMG_NAME%.*}"
 
 			echo "<a class=\"list-block\" href=\"./originaux/${IMG}\">
 				<figure>
